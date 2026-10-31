@@ -17,11 +17,14 @@ from app.cliente import exigir_completo
 def opciones_razonamiento(pensar: bool, effort: str) -> dict:
     """Devuelve los parámetros extra que los Pasos 1 y 4 pasan con **opciones."""
 
-    # TODO: si pensar es False, devuelve {}.
-    #       si pensar es True, devuelve:
-    #         {"thinking": {"type": "adaptive", "display": "summarized"},
-    #          "output_config": {"effort": effort}}
-    opciones = ...
+    # SOLUCIÓN
+    if not pensar:
+        opciones = {}
+    else:
+        opciones = {
+            "thinking": {"type": "adaptive", "display": "summarized"},
+            "output_config": {"effort": effort},
+        }
 
     exigir_completo(opciones, paso=5)
     return opciones
