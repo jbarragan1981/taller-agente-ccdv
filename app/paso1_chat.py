@@ -18,8 +18,8 @@ def texto_de(resp) -> str:
     La respuesta de Claude llega como una LISTA de content blocks (resp.content).
     Puede traer bloques "text", "thinking" o "tool_use", así que hay que filtrar por tipo.
     """
-    # TODO 1: recorre resp.content y concatena block.text de los bloques con block.type == "text".
-    texto = ...
+    # SOLUCIÓN TODO 1
+    texto = "".join(block.text for block in resp.content if block.type == "text")
 
     exigir_completo(texto, paso=1)
     return texto
@@ -31,12 +31,14 @@ def responder(historial: list[dict], opciones: dict) -> dict:
     historial: [{"role": "user" | "assistant", "content": "..."}, ...]
     opciones:  parámetros extra que arma el Paso 5 (thinking, effort). Mientras tanto llega vacío.
     """
-    # TODO 2: llama a client.messages.create() con estos parámetros:
-    #   - model=MODEL y max_tokens=MAX_TOKENS
-    #   - system=SYSTEM_PROMPT
-    #   - messages=historial   (la API no guarda estado: aquí va TODA la conversación)
-    #   - **opciones
-    resp = ...
+    # SOLUCIÓN TODO 2
+    resp = client.messages.create(
+        model=MODEL,
+        max_tokens=MAX_TOKENS,
+        system=SYSTEM_PROMPT,
+        messages=historial,  # la API no guarda estado: aquí va TODA la conversación
+        **opciones,
+    )
 
     exigir_completo(resp, paso=1)
     return {
