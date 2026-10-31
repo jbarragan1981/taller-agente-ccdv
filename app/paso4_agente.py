@@ -25,37 +25,43 @@ def agente(historial: list[dict], opciones: dict) -> dict:
     traza, thinking, debug = [], [], []
 
     for _ in range(MAX_VUELTAS):
-        # TODO 1: llama a client.messages.create() igual que en el Paso 1, pero con
-        #   system=SYSTEM_AGENTE, tools=TOOLS y messages=messages (más **opciones).
-        resp = ...
+        # SOLUCIÓN TODO 1
+        resp = client.messages.create(
+            model=MODEL,
+            max_tokens=MAX_TOKENS,
+            system=SYSTEM_AGENTE,
+            tools=TOOLS,
+            messages=messages,
+            **opciones,
+        )
 
         exigir_completo(resp, paso=4)
         debug.append(resumen_respuesta(resp, "agente"))
         thinking += resumenes_thinking(resp)
 
-        # TODO 2 (regla de carry-back): agrega a messages el turno del asistente COMPLETO,
-        #   tal como llegó: {"role": "assistant", "content": resp.content}
-        #   Si filtras los bloques thinking, la API rechaza la siguiente llamada.
+        # SOLUCIÓN TODO 2 (carry-back): el turno del asistente vuelve completo, thinking incluido.
+        messages.append({"role": "assistant", "content": resp.content})
 
-        # TODO 3: si resp.stop_reason != "tool_use", Claude ya terminó:
-        #   return {"texto": texto_de(resp), "thinking": thinking, "traza": traza, "debug": debug}
+        # SOLUCIÓN TODO 3
+        if resp.stop_reason != "tool_use":
+            return {"texto": texto_de(resp), "thinking": thinking, "traza": traza, "debug": debug}
 
         resultados = []
         for bloque in resp.content:
             if bloque.type != "tool_use":
                 continue
-            # TODO 4: para cada bloque tool_use:
-            #   a) resultado = ejecutar_herramienta(bloque.name, bloque.input)
-            #   b) traza.append({"herramienta": bloque.name, "entrada": bloque.input, "resultado": resultado})
-            #   c) resultados.append({
-            #          "type": "tool_result",
-            #          "tool_use_id": bloque.id,            # empareja el resultado con su llamada
-            #          "content": json.dumps(resultado, ensure_ascii=False),
-            #          "is_error": "error" in resultado,    # avisa a Claude que la herramienta falló
-            #      })
+            # SOLUCIÓN TODO 4
+            resultado = ejecutar_herramienta(bloque.name, bloque.input)
+            traza.append({"herramienta": bloque.name, "entrada": bloque.input, "resultado": resultado})
+            resultados.append({
+                "type": "tool_result",
+                "tool_use_id": bloque.id,
+                "content": json.dumps(resultado, ensure_ascii=False),
+                "is_error": "error" in resultado,
+            })
 
-        # TODO 5: agrega UN solo mensaje user con TODOS los tool_result de esta vuelta:
-        #   {"role": "user", "content": resultados}
+        # SOLUCIÓN TODO 5: todos los tool_result de la vuelta en UN mensaje user.
+        messages.append({"role": "user", "content": resultados})
 
     return {
         "texto": "No pude completar la consulta en el número máximo de pasos. ¿Puedes darme más detalles?",
