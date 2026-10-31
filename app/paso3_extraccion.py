@@ -42,20 +42,24 @@ SCHEMA_TICKET = {
 def extraer_ticket(texto: str) -> dict:
     """Devuelve {"ticket": dict | None, "error": str | None, "debug": [...]}."""
 
-    # TODO 1: llama a client.messages.create() con:
-    #   - model=MODEL, max_tokens=MAX_TOKENS_EXTRACCION, system=SYSTEM_EXTRACCION
-    #   - messages con un mensaje user cuyo content sea f"<ticket>{texto}</ticket>"
-    #   - output_config={"format": {"type": "json_schema", "schema": SCHEMA_TICKET}}
-    resp = ...
+    # SOLUCIÓN TODO 1
+    resp = client.messages.create(
+        model=MODEL,
+        max_tokens=MAX_TOKENS_EXTRACCION,
+        system=SYSTEM_EXTRACCION,
+        messages=[{"role": "user", "content": f"<ticket>{texto}</ticket>"}],
+        output_config={"format": {"type": "json_schema", "schema": SCHEMA_TICKET}},
+    )
 
     exigir_completo(resp, paso=3)
     debug = [resumen_respuesta(resp, "extraccion")]
 
-    # TODO 2: si resp.stop_reason es "max_tokens" o "refusal", NO parsees:
-    #   devuelve {"ticket": None, "error": f"stop_reason={resp.stop_reason}", "debug": debug}
+    # SOLUCIÓN TODO 2: un schema garantizado no es un éxito garantizado.
+    if resp.stop_reason in ("max_tokens", "refusal"):
+        return {"ticket": None, "error": f"stop_reason={resp.stop_reason}", "debug": debug}
 
-    # TODO 3: convierte el texto de la respuesta en dict con json.loads(texto_de(resp))
-    ticket = ...
+    # SOLUCIÓN TODO 3
+    ticket = json.loads(texto_de(resp))
 
     exigir_completo(ticket, paso=3)
     return {"ticket": ticket, "error": None, "debug": debug}
